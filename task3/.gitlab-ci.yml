@@ -1,0 +1,42 @@
+stages:
+  - test
+  - build
+
+test:
+  stage: test
+  image: golang:1.16
+  script:
+    - go test .
+  rules:
+    - changes:
+        - "*.go"
+
+sonarqube-check:
+  stage: test
+  image:
+    name: sonarsource/sonar-scanner-cli
+    entrypoint: [""]
+  variables:
+    SONAR_HOST_URL: "http://192.168.56.10:9000"
+    SONAR_LOGIN: "sqp_534c17c98be70e022318bb19a55c2e7688172247"
+  script:
+    - sonar-scanner -Dsonar.projectKey=my_project -Dsonar.sources=. -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
+
+build_01:
+  stage: build
+  image: docker:latest
+  only:
+    - master
+  script:
+    - docker build .
+
+build:
+  stage: build
+  image: docker:latest
+  when: manual
+  except:
+    - master
+  script:
+    - docker build .
+  needs: []
+
